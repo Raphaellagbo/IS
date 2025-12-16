@@ -24,7 +24,7 @@ jobs:
           pip install -r requirements.txt
       - name: Lint
         run: |
-          flake8 --max-line-length=120 || true
+          flake8 --max-line-length=120
 
       - name: Check migrations exist
         run: |
