@@ -11,8 +11,12 @@ let resetToken = null; // used when a reset token is in URL
 function showLogin() {
     const loginCard = document.getElementById('login-card');
     const registerCard = document.getElementById('register-card');
+    const reqCard = document.getElementById('password-reset-request-card');
+    const resetCard = document.getElementById('password-reset-card');
     if (loginCard) loginCard.style.display = '';
     if (registerCard) registerCard.style.display = 'none';
+    if (reqCard) reqCard.style.display = 'none';
+    if (resetCard) resetCard.style.display = 'none';
 
     document.getElementById('login-form').style.display = '';
     document.getElementById('register-form').style.display = 'none';
@@ -26,8 +30,12 @@ function showLogin() {
 function showRegister() {
     const loginCard = document.getElementById('login-card');
     const registerCard = document.getElementById('register-card');
+    const reqCard = document.getElementById('password-reset-request-card');
+    const resetCard = document.getElementById('password-reset-card');
     if (loginCard) loginCard.style.display = 'none';
     if (registerCard) registerCard.style.display = '';
+    if (reqCard) reqCard.style.display = 'none';
+    if (resetCard) resetCard.style.display = 'none';
 
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = '';
