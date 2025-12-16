@@ -9,6 +9,11 @@ let resetToken = null; // used when a reset token is in URL
 
 // AUTH UI SWITCHERS
 function showLogin() {
+    const loginCard = document.getElementById('login-card');
+    const registerCard = document.getElementById('register-card');
+    if (loginCard) loginCard.style.display = '';
+    if (registerCard) registerCard.style.display = 'none';
+
     document.getElementById('login-form').style.display = '';
     document.getElementById('register-form').style.display = 'none';
     // Ensure password reset forms are hidden
@@ -19,6 +24,11 @@ function showLogin() {
 }
 
 function showRegister() {
+    const loginCard = document.getElementById('login-card');
+    const registerCard = document.getElementById('register-card');
+    if (loginCard) loginCard.style.display = 'none';
+    if (registerCard) registerCard.style.display = '';
+
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = '';
 }
