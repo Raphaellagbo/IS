@@ -1121,17 +1121,41 @@ function checkQueryParamsOnLoad() {
 }
 
 function showPasswordResetRequest() {
+    const loginCard = document.getElementById('login-card');
+    const registerCard = document.getElementById('register-card');
+    const reqCard = document.getElementById('password-reset-request-card');
+    const resetCard = document.getElementById('password-reset-card');
+    if (loginCard) loginCard.style.display = 'none';
+    if (registerCard) registerCard.style.display = 'none';
+    if (reqCard) reqCard.style.display = '';
+    if (resetCard) resetCard.style.display = 'none';
+
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'none';
-    document.getElementById('password-reset-request-form').style.display = '';
-    document.getElementById('password-reset-form').style.display = 'none';
+    // show request form inside its card
+    const reqForm = document.getElementById('password-reset-request-form');
+    if (reqForm) reqForm.style.display = '';
+    const resetForm = document.getElementById('password-reset-form');
+    if (resetForm) resetForm.style.display = 'none';
 }
 
 function showPasswordResetForm() {
+    const loginCard = document.getElementById('login-card');
+    const registerCard = document.getElementById('register-card');
+    const reqCard = document.getElementById('password-reset-request-card');
+    const resetCard = document.getElementById('password-reset-card');
+    if (loginCard) loginCard.style.display = 'none';
+    if (registerCard) registerCard.style.display = 'none';
+    if (reqCard) reqCard.style.display = 'none';
+    if (resetCard) resetCard.style.display = '';
+
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'none';
-    document.getElementById('password-reset-request-form').style.display = 'none';
-    document.getElementById('password-reset-form').style.display = '';
+    // show reset form inside its card
+    const reqForm = document.getElementById('password-reset-request-form');
+    if (reqForm) reqForm.style.display = 'none';
+    const resetForm = document.getElementById('password-reset-form');
+    if (resetForm) resetForm.style.display = '';
     // focus the password input
     setTimeout(() => {
         const el = document.getElementById('reset-new-password');

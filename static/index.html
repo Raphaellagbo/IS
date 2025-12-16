@@ -165,6 +165,20 @@
             .login-card .btn-lg {
                 width: 100%;
             }
+
+            .reset-card {
+                padding: 1rem;
+            }
+
+            .reset-card .btn-lg {
+                width: 100%;
+            }
+        }
+
+        /* Reset card styling */
+        .reset-card {
+            max-width: 520px;
+            border-radius: 12px;
         }
 
         /* ... (rest of CSS for actions) ... */
@@ -250,25 +264,41 @@
                         </form>
                     </div>
 
-                    <form class="mb-3" id="password-reset-request-form" style="display:none;">
-                        <input type="email" id="reset-request-email" class="form-control mb-2"
-                            placeholder="Enter your email to reset password" required>
-                        <button type="submit" class="btn btn-warning w-100 mb-2">Request password reset</button>
-                        <button type="button" class="btn btn-outline-secondary w-100" onclick="showLogin()">Back to
-                            Login</button>
-                    </form>
-
-                    <form class="mb-3" id="password-reset-form" style="display:none;">
-                        <input type="password" id="reset-new-password" class="form-control mb-2"
-                            placeholder="New password" required>
-                        <div class="progress mb-2" style="height:8px;">
-                            <div id="reset-password-strength" class="progress-bar" role="progressbar" style="width:0%">
+                    <div id="password-reset-request-card" class="card reset-card mx-auto shadow-sm p-4"
+                        style="display:none;">
+                        <h4 class="mb-3">Reset your password</h4>
+                        <form id="password-reset-request-form" class="mb-0">
+                            <label for="reset-request-email" class="form-label small text-muted">Enter your account
+                                email</label>
+                            <input type="email" id="reset-request-email" class="form-control mb-2"
+                                placeholder="you@example.com" required>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="submit" class="btn btn-warning btn-lg flex-grow-1">Request reset</button>
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="showLogin()">Back</button>
                             </div>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 mb-2">Reset password</button>
-                        <button type="button" class="btn btn-outline-secondary w-100" onclick="showLogin()">Back to
-                            Login</button>
-                    </form>
+                        </form>
+                    </div>
+
+                    <div id="password-reset-card" class="card reset-card mx-auto shadow-sm p-4" style="display:none;">
+                        <h4 class="mb-3">Set a new password</h4>
+                        <form id="password-reset-form" class="mb-0">
+                            <label for="reset-new-password" class="form-label small text-muted">New password</label>
+                            <input type="password" id="reset-new-password" class="form-control mb-2"
+                                placeholder="New password" required>
+                            <div class="progress mb-1" style="height:8px;">
+                                <div id="reset-password-strength" class="progress-bar" role="progressbar"
+                                    style="width:0%"></div>
+                            </div>
+                            <div id="reset-password-hint" class="form-text text-muted mb-2">At least 10 chars, include
+                                uppercase, lowercase, number & special</div>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="submit" class="btn btn-success btn-lg flex-grow-1">Reset password</button>
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="showLogin()">Back</button>
+                            </div>
+                        </form>
+                    </div>
                     <form class="mb-3" id="register-form" style="display:none;">
                         <div id="register-card" class="card register-card mx-auto shadow-sm p-4">
                             <h4 class="mb-3">Create your account</h4>
