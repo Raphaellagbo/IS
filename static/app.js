@@ -27,20 +27,43 @@ function showRegister() {
 // LOGIN / REGISTER / LOGOUT
 async function loginFunc(event) {
     event.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-    if (data.status === "logged in") {
-        loggedIn = true;
-        showDashboard(data.username);
-        showTab('dashboard');
-    } else {
-        showNotification(data.error || "Login failed");
+    const btn = document.getElementById('login-button');
+    const btnText = document.getElementById('login-button-text');
+    btn.disabled = true;
+    const prevText = btnText.innerHTML;
+    btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...';
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+
+    try {
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.status === "logged in") {
+            loggedIn = true;
+            showDashboard(data.username);
+            showTab('dashboard');
+        } else {
+            if (errorEl) {
+                errorEl.style.display = 'block';
+                errorEl.textContent = data.error || "Login failed";
+            }
+            showNotification(data.error || "Login failed");
+        }
+    } catch (err) {
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.textContent = 'Login request failed';
+        }
+        showNotification('Login request failed', 'danger');
+    } finally {
+        btn.disabled = false;
+        btnText.innerHTML = prevText;
     }
 }
 
