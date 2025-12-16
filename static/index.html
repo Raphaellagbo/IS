@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Email Prioritizer App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            visibility: hidden;
+        }
+
+        body.loaded {
+            visibility: visible;
+        }
+
+        /* --- Sidebar Adjustments --- */
+        .offcanvas {
+            background-color: #212529 !important;
+            /* Dark background */
+        }
+
+        .offcanvas-body .btn {
+            text-align: left;
+            /* REMOVED: width: 100%; */
+            margin-bottom: 5px;
+            /* Added margin for aesthetics */
+            margin-left: 10px;
+        }
+
+        /* --- EMAIL CARD CSS (REMAINS) --- */
+        .email-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 5px solid transparent;
+            position: relative;
+            padding-right: 180px !important;
+            min-height: 110px;
+        }
+
+        .email-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Priority Line Colors */
+        .priority-p1 {
+            border-left-color: #dc3545 !important;
+        }
+
+        .priority-p2 {
+            border-left-color: #ffc107 !important;
+        }
+
+        .priority-p3 {
+            border-left-color: #0d6efd !important;
+        }
+
+        .priority-p4 {
+            border-left-color: #6c757d !important;
+        }
+
+        .priority-pastdue {
+            border-left-color: #8b0000 !important;
+        }
+
+        /* ABSOLUTE RIGHT PANEL */
+        .right-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 170px;
+            height: calc(100% - 20px);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .mark-buttons {
+            margin-top: 10px;
+        }
+
+        .mark-buttons .btn {
+            width: 100%;
+        }
+
+        .date-display {
+            margin-top: auto;
+            line-height: 1.2;
+        }
+
+        .date-display .badge {
+            white-space: nowrap;
+        }
+
+        .reply-list .card {
+            background-color: #f8f9fa;
+        }
+
+        /* Modal body scroll fix for very long email content */
+        .modal-body {
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        /* Multi-line snippet clamp for email preview cards */
+        .snippet {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Custom style for small links under forms */
+        .form-actions .btn-link.small {
+            font-size: 0.9rem;
+            padding: 0;
+        }
+
+        /* ... (rest of CSS for actions) ... */
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-primary mb-3 sticky-top" id="main-navbar">
+        <div class="container-fluid">
+            <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNav"
+                aria-controls="offcanvasNav" id="sidebar-toggle" style="display:none;">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <span class="navbar-brand fw-bold fs-4 ms-3">📧 Email Prioritizer</span>
+
+            <div class="d-flex align-items-center ms-auto">
+                <div id="user-info" style="display:none;">
+                    <span class="fw-bold text-white">Logged in as: <span id="userinfo-name"></span></span>
+                </div>
+                <button id="logout-navbar" class="btn btn-outline-light ms-3" style="display:none;"
+                    onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNav" aria-labelledby="offcanvasNavLabel">
+        <div class="offcanvas-header bg-dark">
+            <h5 class="offcanvas-title text-white" id="offcanvasNavLabel">Navigation</h5>
+            <button type="button" class="btn-close text-reset btn-close-white" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column gap-2"> <button class="btn btn-outline-light"
+                onclick="showTab('dashboard')" data-bs-dismiss="offcanvas">📬 Dashboard</button>
+            <button class="btn btn-outline-light" onclick="showTab('compose')" data-bs-dismiss="offcanvas">📤
+                Compose</button>
+            <button class="btn btn-outline-light" onclick="showTab('manual-classify')" data-bs-dismiss="offcanvas">➕ Add
+                Email</button>
+            <button class="btn btn-outline-light" onclick="showTab('archived')" data-bs-dismiss="offcanvas">📦
+                Archived</button>
+            <button class="btn btn-outline-light" onclick="showTab('trashed')" data-bs-dismiss="offcanvas">🗑️
+                Trash</button>
+            <button class="btn btn-outline-light" onclick="showTab('settings')" data-bs-dismiss="offcanvas">⚙️
+                Settings</button>
+        </div>
+    </div>
+
+    <div class="main-content-wrapper">
+        <div class="container py-4">
+            <div id="auth-section" class="mb-4" style="display:none !important;">
+                <div id="login-box">
+                    <h3 class="mb-3">Login / Register</h3>
+                    <form class="mb-3" id="login-form">
+                        <input type="text" id="login-username" class="form-control mb-2" placeholder="Username"
+                            required>
+                        <input type="password" id="login-password" class="form-control mb-2" placeholder="Password"
+                            required>
+                        <div class="mb-2">
+                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                            <div class="text-end mt-1">
+                                <button type="button" class="btn btn-link p-0 small text-muted"
+                                    id="forgot-password-link" onclick="showPasswordResetRequest()">Forgot
+                                    password?</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="showRegister()">Go to
+                            Register</button>
+                    </form>
+
+                    <form class="mb-3" id="password-reset-request-form" style="display:none;">
+                        <input type="email" id="reset-request-email" class="form-control mb-2"
+                            placeholder="Enter your email to reset password" required>
+                        <button type="submit" class="btn btn-warning w-100 mb-2">Request password reset</button>
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="showLogin()">Back to
+                            Login</button>
+                    </form>
+
+                    <form class="mb-3" id="password-reset-form" style="display:none;">
+                        <input type="password" id="reset-new-password" class="form-control mb-2"
+                            placeholder="New password" required>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div id="reset-password-strength" class="progress-bar" role="progressbar" style="width:0%">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 mb-2">Reset password</button>
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="showLogin()">Back to
+                            Login</button>
+                    </form>
+                    <form class="mb-3" id="register-form" style="display:none;">
+                        <input type="text" id="register-fullname" class="form-control mb-2" placeholder="Full name">
+                        <input type="email" id="register-email" class="form-control mb-2" placeholder="Email" required>
+                        <input type="text" id="register-phone" class="form-control mb-2" placeholder="Phone (optional)">
+                        <input type="text" id="register-organization" class="form-control mb-2"
+                            placeholder="Organization (optional)">
+                        <input type="text" id="register-username" class="form-control mb-2" placeholder="Username"
+                            required>
+                        <input type="password" id="register-password" class="form-control mb-2" placeholder="Password"
+                            required>
+                        <div class="progress mb-2" style="height:8px;">
+                            <div id="register-password-strength" class="progress-bar" role="progressbar"
+                                style="width:0%"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 mb-2">Register</button>
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="showLogin()">Go to
+                            Login</button>
+                    </form>
+                </div>
+            </div>
+
+            <section id="dashboard" style="display:none !important;">
+                <h2 class="mb-3">📬 Dashboard (Active Inbox)</h2>
+
+                <div class="row mb-3 align-items-center g-2">
+                    <div class="col-md-9">
+                        <input type="text" id="searchbar" class="form-control" placeholder="Search emails..."
+                            onkeyup="searchEmails()">
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-success w-100" onclick="importGmail()">Import from Gmail</button>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-3 gap-2 flex-wrap">
+                    <button class="btn btn-primary" onclick="filterEmails('important')">Important</button>
+                    <button class="btn btn-secondary" onclick="filterEmails('not-important')">Not Important</button>
+                    <button class="btn btn-outline-info" onclick="filterEmails('all')">All Emails</button>
+                    <button class="btn btn-outline-warning" onclick="filterEmails('pending')">Pending</button>
+                    <button class="btn btn-outline-danger" onclick="filterEmails('past-due')">Past Due</button>
+                    <span id="stats" class="ms-auto fw-bold text-muted"></span>
+                </div>
+
+                <div id="email-list"></div>
+            </section>
+
+            <section id="manual-classify" style="display:none !important;">
+                <h2 class="mb-3">➕ Add & Auto-Classify Email</h2>
+                <form class="card p-4 shadow-sm" id="add-email-form" onsubmit="return addEmail(event)">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" placeholder="Subject" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sender" class="form-label">Sender</label>
+                            <input type="text" class="form-control" id="sender" placeholder="Sender Name & Email"
+                                required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="content" class="form-label">Content Snippet</label>
+                            <input type="text" class="form-control" id="content" placeholder="Email body/snippet"
+                                required>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Add & Auto-Classify</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+
+            <section id="compose" style="display:none !important;">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">📤 Compose Email</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="compose-form" onsubmit="return sendGmail(event)">
+                            <div class="mb-3">
+                                <label for="send-to" class="form-label">To:</label>
+                                <input type="email" id="send-to" class="form-control"
+                                    placeholder="recipient@example.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="send-subject" class="form-label">Subject:</label>
+                                <input type="text" id="send-subject" class="form-control" placeholder="Email subject"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="send-body" class="form-label">Message:</label>
+                                <textarea id="send-body" class="form-control" rows="8"
+                                    placeholder="Write your message here..." required></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <span id="send-spinner" class="spinner-border spinner-border-sm me-2"
+                                        style="display:none;"></span>
+                                    Send Email
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="clearComposeForm()">Clear</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section id="archived" style="display:none !important;">
+                <h2 class="mb-3">📦 Archived Emails</h2>
+                <p class="text-muted">These are emails (mostly from Gmail) that you've archived. They are hidden from
+                    your
+                    main dashboard.</p>
+                <div id="archived-email-list">
+                </div>
+            </section>
+
+            <section id="trashed" style="display:none !important;">
+                <h2 class="mb-3">🗑️ Trashed Emails</h2>
+                <p class="text-muted">These emails are marked for deletion. Gmail items are also in your Gmail Trash.
+                </p>
+                <div id="trashed-email-list">
+                </div>
+            </section>
+
+            <section id="settings" style="display:none !important;">
+                <h2 class="mb-3">⚙️ Settings</h2>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">General Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="notifications-check">
+                            <label class="form-check-label" for="notifications-check">
+                                Enable browser notifications (for P1 & P2)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="profile-form">
+                            <input type="text" id="profile-fullname" class="form-control mb-2" placeholder="Full name">
+                            <input type="email" id="profile-email" class="form-control mb-2" placeholder="Email">
+                            <div class="d-flex align-items-center mb-2">
+                                <div id="email-confirmation-status" class="me-3 text-muted">Loading...</div>
+                                <button type="button" id="resend-verification"
+                                    class="btn btn-outline-primary btn-sm">Resend verification</button>
+                            </div>
+                            <input type="text" id="profile-phone" class="form-control mb-2"
+                                placeholder="Phone (optional)">
+                            <input type="text" id="profile-organization" class="form-control mb-2"
+                                placeholder="Organization (optional)">
+                            <button type="submit" class="btn btn-primary">Save Profile</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="change-password-form">
+                            <input type="password" id="current-password" class="form-control mb-2"
+                                placeholder="Current password" required>
+                            <input type="password" id="new-password" class="form-control mb-2"
+                                placeholder="New password (min 10 chars, uppercase, lowercase, digit, special)"
+                                required>
+                            <div class="progress mb-2" style="height:8px;">
+                                <div id="change-password-strength" class="progress-bar" role="progressbar"
+                                    style="width:0%"></div>
+                            </div>
+                            <button type="submit" class="btn btn-warning">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">P1: Priority Senders</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Emails from these addresses will *always* be P1 - Critical (and appear first).
+                        </p>
+                        <form id="priority-sender-form" class="d-flex gap-2 mb-3">
+                            <input type="email" id="priority-sender-email" class="form-control"
+                                placeholder="boss@company.com" required>
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </form>
+                        <ul id="priority-sender-list" class="list-group">
+                            <li class="list-group-item text-muted">Loading priority list...</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Data Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Automatically remove *active* emails (local copies) older than 30 days. This does not affect
+                            your actual Gmail inbox, nor your local Archive/Trash.
+                        </p>
+                        <button class="btn btn-danger" onclick="cleanupOldEmails()">
+                            🧹 Cleanup Old Active Emails
+                        </button>
+                    </div>
+                </div>
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">Gmail Integration</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Gmail actions (send, archive, delete) require authentication when used.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+
+    <div id="notif-container" style="position:fixed; bottom:20px; right:20px; z-index:9999;"></div>
+
+    <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="emailModalLabel">Email Detail</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-priority-badge" class="mb-2" style="display:none"></div>
+                    <h4 id="modal-subject"></h4>
+                    <p class="text-muted mb-1">From: <span id="modal-sender"></span></p>
+                    <p class="text-muted mb-3">Received: <span id="modal-date"></span></p>
+                    <hr>
+                    <div id="modal-content-full" style="white-space: pre-wrap;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="reply-button"
+                        onclick="replyToEmail()">Reply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
